@@ -33,6 +33,10 @@ public class BeanBatch {
     @Column(name = "weight_kg", nullable = false, precision = 10, scale = 2)
     public BigDecimal weightKg;
 
+    /** 批次余量（克）：入库时按重量折算，完成制作时按配方扣减 */
+    @Column(name = "remaining_g", nullable = false, precision = 10, scale = 1)
+    public BigDecimal remainingG = BigDecimal.ZERO;
+
     @Column(name = "status", nullable = false, length = 16)
     public String status;
 

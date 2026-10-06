@@ -3,6 +3,7 @@ package com.cafe.house.service;
 import com.cafe.house.common.BizException;
 import com.cafe.house.common.Dict;
 import com.cafe.house.entity.BeanBatch;
+import com.cafe.house.entity.OrderConsumption;
 import com.cafe.house.repository.BeanBatchRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,9 @@ public class BeanBatchService {
 
     @Autowired
     private BeanBatchRepository repo;
+
+    @Autowired
+    private ConsumptionService consumptionService;
 
     public List<BeanBatch> list(String status) {
         return status == null ? repo.findAll() : repo.findByStatus(status);
@@ -87,6 +91,8 @@ public class BeanBatchService {
             throw new BizException("只能将「烘焙中」的批次标记为已入库");
         }
         b.status = "已入库";
+        // 入库时按重量折算初始余量（克），之后只能被账单消耗扣减
+        b.remainingG = b.weightKg.multiply(BigDecimal.valueOf(1000));
         return repo.save(b);
     }
 
@@ -97,5 +103,11 @@ public class BeanBatchService {
         }
         b.status = "已用完";
         return repo.save(b);
+    }
+
+    /** 批次追溯：该批次被哪些账单消耗过（批次号/克数/操作者/时间快照） */
+    public List<OrderConsumption> consumptions(Long id) {
+        repo.findById(id).orElseThrow(() -> new BizException("批次不存在"));
+        return consumptionService.consumptionsOfBatch(id);
     }
 }

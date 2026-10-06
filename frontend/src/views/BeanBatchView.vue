@@ -10,6 +10,10 @@ const editing = ref(false)
 const form = reactive({ id: null, batchNo: '', origin: '', roastLevel: '中', weightKg: '' })
 const ROAST_LEVELS = ['浅', '中', '深']
 
+const consumeDialog = ref(false)
+const consumeBatch = ref(null)
+const consumptions = ref([])
+
 const statusType = (s) => ({ '待烘焙': 'info', '烘焙中': 'warning', '已入库': 'success', '已用完': 'default' }[s] || 'info')
 
 async function load() {
@@ -42,6 +46,14 @@ async function action(r, fn, label) {
   try { await fn(r.id); await load(); emit('changed'); ElMessage.success(label) }
   catch (e) { ElMessage.error(e.message) }
 }
+
+/** 批次追溯：该批次被哪些账单消耗过 */
+async function openConsumptions(r) {
+  consumeBatch.value = r
+  consumptions.value = await api.listBatchConsumptions(r.id)
+  consumeDialog.value = true
+}
+
 onMounted(load)
 </script>
 
@@ -53,19 +65,23 @@ onMounted(load)
     </div>
 
     <el-table :data="rows" border stripe>
-      <el-table-column prop="batchNo" label="批次号" width="140" />
-      <el-table-column prop="origin" label="产地" min-width="160" />
-      <el-table-column prop="roastLevel" label="烘焙度" width="90" align="center" />
-      <el-table-column prop="weightKg" label="重量(kg)" width="110" align="right" />
-      <el-table-column label="状态" width="110" align="center">
+      <el-table-column prop="batchNo" label="批次号" width="130" />
+      <el-table-column prop="origin" label="产地（豆种）" min-width="150" />
+      <el-table-column prop="roastLevel" label="烘焙度" width="80" align="center" />
+      <el-table-column prop="weightKg" label="重量(kg)" width="90" align="right" />
+      <el-table-column label="余量(g)" width="100" align="right">
+        <template #default="{ row }">{{ Number(row.remainingG).toFixed(1) }}</template>
+      </el-table-column>
+      <el-table-column label="状态" width="100" align="center">
         <template #default="{ row }"><el-tag :type="statusType(row.status)">{{ row.status }}</el-tag></template>
       </el-table-column>
-      <el-table-column label="操作" min-width="260">
+      <el-table-column label="操作" min-width="320">
         <template #default="{ row }">
           <el-button size="small" @click="openEdit(row)">编辑</el-button>
           <el-button v-if="row.status==='待烘焙'" size="small" type="warning" @click="action(row, api.roastBeanBatch, '已送入烘焙')">送入烘焙</el-button>
           <el-button v-if="row.status==='烘焙中'" size="small" type="success" @click="action(row, api.finishRoastBeanBatch, '已入库')">标记入库</el-button>
           <el-button v-if="row.status==='已入库'" size="small" @click="action(row, api.depleteBeanBatch, '已用完')">标记用完</el-button>
+          <el-button size="small" type="primary" plain @click="openConsumptions(row)">消耗记录</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -86,10 +102,29 @@ onMounted(load)
         <el-button type="primary" @click="submit">保存</el-button>
       </template>
     </el-dialog>
+
+    <!-- 批次追溯：被哪些账单消耗过 -->
+    <el-dialog
+      v-model="consumeDialog"
+      :title="`消耗记录 · ${consumeBatch ? consumeBatch.batchNo + '（' + consumeBatch.origin + '）' : ''}`"
+      width="720px"
+    >
+      <el-table :data="consumptions" border size="small" max-height="420">
+        <el-table-column prop="ticketId" label="账单号" width="90" align="center" />
+        <el-table-column prop="menuName" label="饮品" min-width="120" />
+        <el-table-column label="扣减克数" width="100" align="right">
+          <template #default="{ row }">{{ Number(row.grams) }} g</template>
+        </el-table-column>
+        <el-table-column prop="operator" label="操作者" width="100" align="center" />
+        <el-table-column prop="createdAt" label="消耗时间" width="170" />
+      </el-table>
+      <div v-if="!consumptions.length" class="empty-tip">该批次暂无消耗记录</div>
+    </el-dialog>
   </div>
 </template>
 
 <style scoped>
 .page-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
 h2 { margin: 0; font-size: 18px; }
+.empty-tip { color: var(--muted); text-align: center; padding: 20px 0; }
 </style>

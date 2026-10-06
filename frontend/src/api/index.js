@@ -29,11 +29,16 @@ export default {
   roastBeanBatch: (id) => call(http.post(`/bean-batches/${id}/roast`)),
   finishRoastBeanBatch: (id) => call(http.post(`/bean-batches/${id}/finish-roast`)),
   depleteBeanBatch: (id) => call(http.post(`/bean-batches/${id}/deplete`)),
+  listBatchConsumptions: (id) => call(http.get(`/bean-batches/${id}/consumptions`)),
 
   // ---------------- 饮品菜单 ----------------
   listMenuItems: (status) => call(http.get('/menu-items', params(status ? { status } : {}))),
   createMenuItem: (d) => call(http.post('/menu-items', d)),
   updateMenuItem: (id, d) => call(http.put(`/menu-items/${id}`, d)),
+  getMenuRecipe: (id) => call(http.get(`/menu-items/${id}/recipe`)),
+  saveMenuRecipe: (id, lines) => call(http.put(`/menu-items/${id}/recipe`, lines)),
+  listBeanOrigins: () => call(http.get('/menu-items/bean-origins')),
+  listMenuAvailability: () => call(http.get('/menu-items/availability')),
 
   // ---------------- 桌台 ----------------
   listTableInfos: (status) => call(http.get('/table-infos', params(status ? { status } : {}))),
@@ -47,6 +52,6 @@ export default {
   createOrderTicket: (d) => call(http.post('/order-tickets', d)),
   getOrderTicket: (id) => call(http.get(`/order-tickets/${id}`)),
   addOrderItem: (id, d) => call(http.post(`/order-tickets/${id}/add-item`, d)),
-  finishOrderTicket: (id) => call(http.post(`/order-tickets/${id}/finish`)),
+  finishOrderTicket: (id, operator) => call(http.post(`/order-tickets/${id}/finish`, { operator })),
   settleOrderTicket: (id) => call(http.post(`/order-tickets/${id}/settle`))
 }

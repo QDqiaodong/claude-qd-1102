@@ -4,7 +4,7 @@ import com.cafe.house.common.ApiResponse;
 import com.cafe.house.service.OrderTicketService;
 import com.cafe.house.service.OrderTicketService.AddItemRequest;
 import com.cafe.house.service.OrderTicketService.CreateTicketRequest;
-import com.cafe.house.service.OrderTicketService.OrderItemInput;
+import com.cafe.house.service.OrderTicketService.FinishRequest;
 import com.cafe.house.service.OrderTicketService.OrderTicketDetail;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,8 +46,9 @@ public class OrderTicketController {
     }
 
     @PostMapping("/{id}/finish")
-    public ApiResponse<OrderTicketDetail> finish(@PathVariable Long id) {
-        return ApiResponse.success(service.finish(id));
+    public ApiResponse<OrderTicketDetail> finish(@PathVariable Long id,
+                                                 @RequestBody(required = false) FinishRequest req) {
+        return ApiResponse.success(service.finish(id, req));
     }
 
     @PostMapping("/{id}/settle")

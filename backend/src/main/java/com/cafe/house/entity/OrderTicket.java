@@ -30,6 +30,14 @@ public class OrderTicket {
     @Column(name = "status", nullable = false, length = 16)
     public String status;
 
+    /** 完成制作的操作者（收银员），消耗流水与其同源生成 */
+    @Column(name = "finished_by", length = 32)
+    public String finishedBy;
+
+    /** 完成时间 = 消耗生成时间 */
+    @Column(name = "finished_at")
+    public LocalDateTime finishedAt;
+
     @Column(name = "created_at")
     public LocalDateTime createdAt = LocalDateTime.now();
 }

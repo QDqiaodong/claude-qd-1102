@@ -2,6 +2,7 @@ package com.cafe.house.controller;
 
 import com.cafe.house.common.ApiResponse;
 import com.cafe.house.entity.BeanBatch;
+import com.cafe.house.entity.OrderConsumption;
 import com.cafe.house.service.BeanBatchService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,5 +52,11 @@ public class BeanBatchController {
     @PostMapping("/{id}/deplete")
     public ApiResponse<BeanBatch> deplete(@PathVariable Long id) {
         return ApiResponse.success(service.deplete(id));
+    }
+
+    /** 批次追溯：该批次被哪些账单消耗过 */
+    @GetMapping("/{id}/consumptions")
+    public ApiResponse<List<OrderConsumption>> consumptions(@PathVariable Long id) {
+        return ApiResponse.success(service.consumptions(id));
     }
 }

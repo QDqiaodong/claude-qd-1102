@@ -7,6 +7,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import java.math.BigDecimal;
+
 /**
  * 账单明细：每条记录属于某账单、指向某饮品、带数量。
  */
@@ -23,6 +25,14 @@ public class OrderItem {
 
     @Column(name = "menu_item_id", nullable = false)
     public Long menuItemId;
+
+    /** 饮品名快照：加单时刻固化，之后改名不影响历史账单 */
+    @Column(name = "menu_name", nullable = false, length = 64)
+    public String menuName;
+
+    /** 单价快照：加单时刻固化，之后调价不影响历史账单 */
+    @Column(name = "unit_price", nullable = false, precision = 10, scale = 2)
+    public BigDecimal unitPrice;
 
     @Column(name = "qty", nullable = false)
     public Integer qty;
