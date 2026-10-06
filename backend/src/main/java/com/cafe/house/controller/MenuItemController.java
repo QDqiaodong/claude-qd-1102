@@ -1,8 +1,10 @@
 package com.cafe.house.controller;
 
 import com.cafe.house.common.ApiResponse;
-import com.cafe.house.entity.MenuItem;
 import com.cafe.house.service.MenuItemService;
+import com.cafe.house.service.MenuItemService.RecipeLineInput;
+import com.cafe.house.service.MenuItemService.RecipeLineView;
+import com.cafe.house.entity.MenuItem;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,5 +38,19 @@ public class MenuItemController {
     @PutMapping("/{id}")
     public ApiResponse<MenuItem> update(@PathVariable Long id, @RequestBody MenuItem input) {
         return ApiResponse.success(service.update(id, input));
+    }
+
+    // ---------------- 配方 ----------------
+
+    @GetMapping("/{id}/recipe")
+    public ApiResponse<List<RecipeLineView>> getRecipe(@PathVariable Long id) {
+        return ApiResponse.success(service.getRecipe(id));
+    }
+
+    /** 全量保存配方：只接收豆种+克数，没有批次字段，前台无法绕过配方指定批次。 */
+    @PutMapping("/{id}/recipe")
+    public ApiResponse<List<RecipeLineView>> saveRecipe(@PathVariable Long id,
+                                                        @RequestBody(required = false) List<RecipeLineInput> lines) {
+        return ApiResponse.success(service.saveRecipe(id, lines));
     }
 }

@@ -4,7 +4,8 @@ import com.cafe.house.common.ApiResponse;
 import com.cafe.house.service.OrderTicketService;
 import com.cafe.house.service.OrderTicketService.AddItemRequest;
 import com.cafe.house.service.OrderTicketService.CreateTicketRequest;
-import com.cafe.house.service.OrderTicketService.OrderItemInput;
+import com.cafe.house.service.OrderTicketService.FinishPreview;
+import com.cafe.house.service.OrderTicketService.FinishTicketRequest;
 import com.cafe.house.service.OrderTicketService.OrderTicketDetail;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,9 +46,16 @@ public class OrderTicketController {
         return ApiResponse.success(service.addItem(id, req));
     }
 
+    /** 完成前预览：本次将从哪些批次扣多少克，或为什么做不了。只读。 */
+    @GetMapping("/{id}/finish-preview")
+    public ApiResponse<FinishPreview> previewFinish(@PathVariable Long id) {
+        return ApiResponse.success(service.previewFinish(id));
+    }
+
+    /** 完成制作：必须带操作者；豆量全量满足才扣减并推进状态。 */
     @PostMapping("/{id}/finish")
-    public ApiResponse<OrderTicketDetail> finish(@PathVariable Long id) {
-        return ApiResponse.success(service.finish(id));
+    public ApiResponse<OrderTicketDetail> finish(@PathVariable Long id, @RequestBody(required = false) FinishTicketRequest req) {
+        return ApiResponse.success(service.finish(id, req));
     }
 
     @PostMapping("/{id}/settle")

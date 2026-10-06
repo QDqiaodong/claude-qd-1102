@@ -11,7 +11,10 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * 点单出单（账单）：引用桌台；total 自动汇总；状态（制作中/已完成/已结账）。
+ * 点单出单（账单）：引用桌台；total 按点单快照汇总；状态（制作中/已完成/已结账）。
+ *
+ * <p>finishedBy / finishedAt 在「完成制作」成功扣减豆量的同一事务中写入，
+ * 与 bean_consumption 流水同生共死：账单状态只能推进一次。</p>
  */
 @Entity
 @Table(name = "order_ticket")
@@ -29,6 +32,14 @@ public class OrderTicket {
 
     @Column(name = "status", nullable = false, length = 16)
     public String status;
+
+    /** 完成操作者（收银员），完成制作时必录。 */
+    @Column(name = "finished_by", length = 32)
+    public String finishedBy;
+
+    /** 完成制作（豆量扣减）时间。 */
+    @Column(name = "finished_at")
+    public LocalDateTime finishedAt;
 
     @Column(name = "created_at")
     public LocalDateTime createdAt = LocalDateTime.now();

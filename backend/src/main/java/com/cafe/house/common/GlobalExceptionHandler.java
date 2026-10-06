@@ -2,6 +2,7 @@ package com.cafe.house.common;
 
 import java.util.stream.Collectors;
 
+import org.springframework.dao.CannotAcquireLockException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +11,9 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import jakarta.persistence.LockTimeoutException;
+import jakarta.persistence.PessimisticLockException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -43,11 +47,23 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 唯一约束冲突：400（避免在页面上抛出非人话的外键报错）
+     * 行锁冲突（两名收银员并发完成、抢同一批次，或锁等待超时/死锁回滚）：409。
+     * 事务回滚保证账单保持原状态、批次未被扣减；收银员刷新后可按原流程继续处理。
+     */
+    @ExceptionHandler({PessimisticLockException.class, LockTimeoutException.class,
+            CannotAcquireLockException.class})
+    public ResponseEntity<ApiResponse<Void>> handleLock(Exception e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.fail(
+                "当前有另一位收银员正在处理同一账单或批次，请刷新后重试；本次未扣减任何豆量、账单状态不变"));
+    }
+
+    /**
+     * 唯一约束冲突：400（消耗流水重复时的数据库兜底，正常路径由账单行锁拦截）
      */
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiResponse<Void>> handleIntegrity(DataIntegrityViolationException e) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.fail("存在唯一性约束冲突，请检查编号、手机号是否重复"));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ApiResponse.fail(
+                "数据冲突：该操作可能已提交，请勿重复提交（可刷新账单确认状态）"));
     }
 
     /**

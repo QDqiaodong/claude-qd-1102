@@ -9,6 +9,4 @@ import java.util.List;
 public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
 
     List<OrderItem> findByTicketId(Long ticketId);
-
-    void deleteByTicketId(Long ticketId);
 }
